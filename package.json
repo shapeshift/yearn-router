@@ -1,6 +1,7 @@
 {
   "name": "@shapeshiftoss/yearn-router",
   "author": "0xean",
+  "version": "0.0.1",
   "devDependencies": {
     "ethlint": "^1.2.5",
     "husky": "^4.3.0",
