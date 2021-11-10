@@ -73,6 +73,13 @@ contract ShapeShiftRouter is BaseRouter {
             );
     }
 
+
+    /**
+    @notice called to migrate the callers token _amount from old vault(s) to the best vault. Caller must approve
+    all vault tokens to be used by the router for this to work 
+    @param _token address of the ERC20 token to withdraw from vaults
+    @param _amount amount of tokens to be migrated
+    */
     function migrate(address _token, uint256 _amount)
         external
         returns (uint256)
@@ -80,6 +87,11 @@ contract ShapeShiftRouter is BaseRouter {
         return _migrate(IERC20(_token), _amount);
     }
 
+     /**
+    @notice called to migrate all of the callers token from old vault(s) to the best vault. Caller must approve
+    all vault tokens to be used by the router for this to work 
+    @param _token address of the ERC20 token to withdraw from vaults
+    */
     function migrate(address _token) external returns (uint256) {
         return _migrate(IERC20(_token), MIGRATE_EVERYTHING);
     }
