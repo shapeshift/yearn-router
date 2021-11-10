@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {VaultAPI} from "@yearnvaults/contracts/BaseWrapper.sol";
 
@@ -22,17 +23,7 @@ interface RegistryAPI {
         returns (address);
 }
 
-/**
- * @title Yearn Base Router
- * @author yearn.finance
- * @notice
- *  BaseRouter implements all of the required functionality to interoperate
- *  closely with the Vault contract. This contract should be inherited and the
- *  abstract methods implemented to adapt the Router.
- *  A good starting point to build a router is https://github.com/yearn/brownie-router-mix
- *
- */
-abstract contract BaseRouter {
+abstract contract BaseRouter is Ownable {
     using Math for uint256;
     using SafeMath for uint256;
 
@@ -58,13 +49,13 @@ abstract contract BaseRouter {
      *  Used to update the yearn registry.
      * @param _registry The new _registry address.
      */
-    function setRegistry(address _registry) external {
-        require(msg.sender == registry.governance());
+    function setRegistry(address _registry) external onlyOwner() {
+        address currentYearnGovernanceAddress = registry.governance();
         // In case you want to override the registry instead of re-deploying
         registry = RegistryAPI(_registry);
         // Make sure there's no change in governance
         // NOTE: Also avoid bricking the router from setting a bad registry
-        require(msg.sender == registry.governance());
+        require(currentYearnGovernanceAddress == registry.governance());
     }
 
     /**
@@ -202,8 +193,9 @@ abstract contract BaseRouter {
         deposited = beforeBal.sub(afterBal);
         // `receiver` now has shares of `_bestVault` as balance, converted to `token` here
         // Issue a refund if not everything was deposited
-        if (depositor != address(this) && afterBal > 0)
+        if (depositor != address(this) && afterBal > 0) {
             SafeERC20.safeTransfer(token, depositor, afterBal);
+        }
     }
 
     function _withdraw(
@@ -249,15 +241,6 @@ abstract contract BaseRouter {
             );
 
             if (availableShares > 0) {
-                // Intermediate step to move shares to this contract before withdrawing
-                // NOTE: No need for share transfer if this contract is `sender`
-                if (sender != address(this))
-                    vaults[id].transferFrom(
-                        sender,
-                        address(this),
-                        availableShares
-                    );
-
                 if (amount != WITHDRAW_EVERYTHING) {
                     // Compute amount to withdraw fully to satisfy the request
                     uint256 estimatedShares = amount
@@ -271,29 +254,40 @@ abstract contract BaseRouter {
                     if (
                         estimatedShares > 0 && estimatedShares < availableShares
                     ) {
+                        if (sender != address(this))
+                            vaults[id].transferFrom(
+                                sender,
+                                address(this),
+                                estimatedShares
+                            );
                         withdrawn = withdrawn.add(
                             vaults[id].withdraw(estimatedShares)
                         );
-
-                      // We need to send the caller back the difference between estimated and available shares
-                      // this should be equal to the vaults[id].balanceOf(address(this)).
-                      if (sender != address(this))
-                        vaults[id].transfer(
-                        sender,
-                        availableShares.sub(estimatedShares)
-                      );
                     } else {
+                        if (sender != address(this))
+                            vaults[id].transferFrom(
+                                sender,
+                                address(this),
+                                availableShares
+                            );
                         withdrawn = withdrawn.add(
                             vaults[id].withdraw(availableShares)
                         );
                     }
                 } else {
+                    // NOTE: No need for share transfer if this contract is `sender`
+                    if (sender != address(this))
+                        vaults[id].transferFrom(
+                            sender,
+                            address(this),
+                            availableShares
+                        );
                     withdrawn = withdrawn.add(vaults[id].withdraw());
                 }
 
                 // Check if we have fully satisfied the request
                 // NOTE: use `amount = WITHDRAW_EVERYTHING` for withdrawing everything
-                if (amount <= withdrawn) break; // withdrawn as much as we needed
+                if (amount <= (withdrawn + 1)) break; // +1 to avoid any integer rounding errors
             }
         }
 

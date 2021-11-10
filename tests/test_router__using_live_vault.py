@@ -15,10 +15,11 @@ def test_setRegistry_live(
 ):
     with brownie.reverts():
         live_shape_shift_router.setRegistry(rando, {"from": rando})
-
+    
+    # Cannot set to an invalid registry
     with brownie.reverts():
         live_shape_shift_router.setRegistry(rando, {"from": affiliate})
-    # Cannot set to an invalid registry
+
     with brownie.reverts():
         live_shape_shift_router.setRegistry(rando, {"from": live_gov})
 
@@ -26,11 +27,11 @@ def test_setRegistry_live(
     new_registry.setGovernance(rando, {"from": gov})
     new_registry.acceptGovernance({"from": rando})
     with brownie.reverts():
-        live_shape_shift_router.setRegistry(new_registry, {"from": live_gov})
+        live_shape_shift_router.setRegistry(new_registry, {"from": affiliate})
     new_registry.setGovernance(live_gov, {"from": rando})
     new_registry.acceptGovernance({"from": live_gov})
 
-    live_shape_shift_router.setRegistry(new_registry, {"from": live_gov})
+    live_shape_shift_router.setRegistry(new_registry, {"from": affiliate})
 
 
 def test_deposit_live(live_token, live_vault, live_shape_shift_router, live_whale, rando):
