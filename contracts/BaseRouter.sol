@@ -55,7 +55,7 @@ abstract contract BaseRouter is Ownable {
         registry = RegistryAPI(_registry);
         // Make sure there's no change in governance
         // NOTE: Also avoid bricking the router from setting a bad registry
-        require(currentYearnGovernanceAddress == registry.governance());
+        require(currentYearnGovernanceAddress == registry.governance(), "INVALID_REGISTRY");
     }
 
     /**

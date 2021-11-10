@@ -51,6 +51,20 @@ def test_setRegistry(rando, affiliate, gov, shape_shift_router, new_registry):
 
     shape_shift_router.setRegistry(new_registry, {"from": affiliate})
 
+def test_transfer_ownership(rando, affiliate, gov, shape_shift_router, new_registry):
+    assert shape_shift_router.owner() == affiliate
+    with brownie.reverts():
+        shape_shift_router.setRegistry(rando, {"from": rando})
+
+    with brownie.reverts():
+      shape_shift_router.transferOwnership(rando, {"from": rando})
+
+    shape_shift_router.transferOwnership(rando, {"from": affiliate})
+
+    # new owner can set registry
+    assert shape_shift_router.owner() == rando
+    shape_shift_router.setRegistry(new_registry, {"from": rando})
+
 
 def test_deposit(token, registry, vault, shape_shift_router, gov, rando):
     registry.newRelease(vault, {"from": gov})
@@ -150,10 +164,6 @@ def test_withdraw_half(token, registry, vault, shape_shift_router, gov, rando):
     shape_shift_router.withdraw(token, rando, 500000, True, {"from": rando})
     
     assert token.balanceOf(rando) == 500000
-    # TODO:
-    # this currently fails due to the BaseRouter call 
-    # `_bestVault.pricePerShare().div(10**_bestVault.decimals())`
-    # not re-depositing the correct amount.
-    # assert token.balanceOf(shape_shift_router) == 0
-    # assert vault.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == 0
+    assert vault.balanceOf(shape_shift_router) == 0
     
