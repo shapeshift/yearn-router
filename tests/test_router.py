@@ -34,9 +34,10 @@ def test_setRegistry(rando, affiliate, gov, shape_shift_router, new_registry):
     with brownie.reverts():
         shape_shift_router.setRegistry(rando, {"from": rando})
 
+    # Cannot set to an invalid registry
     with brownie.reverts():
         shape_shift_router.setRegistry(rando, {"from": affiliate})
-    # Cannot set to an invalid registry
+    
     with brownie.reverts():
         shape_shift_router.setRegistry(rando, {"from": gov})
 
@@ -44,11 +45,11 @@ def test_setRegistry(rando, affiliate, gov, shape_shift_router, new_registry):
     new_registry.setGovernance(rando, {"from": gov})
     new_registry.acceptGovernance({"from": rando})
     with brownie.reverts():
-        shape_shift_router.setRegistry(new_registry, {"from": gov})
+        shape_shift_router.setRegistry(new_registry, {"from": affiliate})
     new_registry.setGovernance(gov, {"from": rando})
     new_registry.acceptGovernance({"from": gov})
 
-    shape_shift_router.setRegistry(new_registry, {"from": gov})
+    shape_shift_router.setRegistry(new_registry, {"from": affiliate})
 
 
 def test_deposit(token, registry, vault, shape_shift_router, gov, rando):
