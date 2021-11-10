@@ -102,9 +102,8 @@ def test_withdraw_half_live(live_token, live_vault, live_shape_shift_router, liv
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
     live_shape_shift_router.withdraw(live_token, rando, 5000, True, {"from": rando})
     
-    # TODO: these fail due to issues in the BaseRouter, FIXME!
-    #assert live_vault.balanceOf(live_shape_shift_router) == 0
-    #assert live_token.balanceOf(live_shape_shift_router) == 0
+    assert live_vault.balanceOf(live_shape_shift_router) == 0
+    assert live_token.balanceOf(live_shape_shift_router) == 0
     # NOTE: Potential for tiny dust loss
     assert 5000 - 10 <= live_token.balanceOf(rando) <= 5000
 
@@ -135,12 +134,10 @@ def test_withdraw_half_with_recipient_live(live_token, live_vault, live_shape_sh
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
     live_shape_shift_router.withdraw(live_token, rando2, 5000, True, {"from": rando})
 
-    # TODO: these fail due to issues in the BaseRouter, FIXME!
-
-    # assert live_vault.balanceOf(rando) == 0
-    # assert live_vault.balanceOf(rando2) == 0
-    # assert live_vault.balanceOf(live_shape_shift_router) == 0
-    # assert live_token.balanceOf(live_shape_shift_router) == 0
+    assert live_token.balanceOf(rando) == 0
+    assert live_vault.balanceOf(rando2) == 0
+    assert live_vault.balanceOf(live_shape_shift_router) == 0
+    assert live_token.balanceOf(live_shape_shift_router) == 0
     
     # NOTE: Potential for tiny dust loss
     assert 5000 - 10 <= live_token.balanceOf(rando2) <= 5000

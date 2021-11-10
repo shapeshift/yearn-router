@@ -274,6 +274,14 @@ abstract contract BaseRouter {
                         withdrawn = withdrawn.add(
                             vaults[id].withdraw(estimatedShares)
                         );
+
+                      // We need to send the caller back the difference between estimated and available shares
+                      // this should be equal to the vaults[id].balanceOf(address(this)).
+                      if (sender != address(this))
+                        vaults[id].transfer(
+                        sender,
+                        availableShares - estimatedShares
+                      );
                     } else {
                         withdrawn = withdrawn.add(
                             vaults[id].withdraw(availableShares)
