@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.6.12;
+pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -23,6 +23,10 @@ interface RegistryAPI {
         returns (address);
 }
 
+/**
+Adapted from the Yearn BaseRouter for Shapeshift's use case of a router that forward native vault tokens
+to the caller and does not hold any funds or assets (vault tokens or other ERC20 tokens)
+ */
 abstract contract BaseRouter is Ownable {
     using Math for uint256;
     using SafeMath for uint256;
@@ -60,7 +64,7 @@ abstract contract BaseRouter is Ownable {
 
     /**
      * @notice
-     *  Used to get the most revent vault for the token using the registry.
+     *  Used to get the most recent vault for the token using the registry.
      * @return An instance of a VaultAPI
      */
     function bestVault(address token) public view virtual returns (VaultAPI) {
@@ -69,7 +73,7 @@ abstract contract BaseRouter is Ownable {
 
     /**
      * @notice
-     *  Used to get all vaults from the registery for the token
+     *  Used to get all vaults from the registry for the token
      * @return An array containing instances of VaultAPI
      */
     function allVaults(address token)
@@ -116,10 +120,10 @@ abstract contract BaseRouter is Ownable {
 
     /**
      * @notice
-     *  Used to get the balance of an account accross all the vaults for a token.
+     *  Used to get the balance of an account across all the vaults for a token.
      *  @dev will be used to get the router balance using totalVaultBalance(address(this)).
      *  @param account The address of the account.
-     *  @return balance of token for the account accross all the vaults.
+     *  @return balance of token for the account across all the vaults.
      */
     function totalVaultBalance(address token, address account)
         public
