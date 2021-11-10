@@ -280,7 +280,7 @@ abstract contract BaseRouter {
                       if (sender != address(this))
                         vaults[id].transfer(
                         sender,
-                        availableShares - estimatedShares
+                        availableShares.sub(estimatedShares)
                       );
                     } else {
                         withdrawn = withdrawn.add(
