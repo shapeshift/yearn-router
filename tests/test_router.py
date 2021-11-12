@@ -45,7 +45,7 @@ def test_setRegistry(rando, affiliate, gov, shape_shift_router, new_registry):
 
     shape_shift_router.setRegistry(new_registry, {"from": affiliate})
 
-def test_transfer_ownership(rando, affiliate, gov, shape_shift_router, new_registry):
+def test_transfer_ownership(rando, affiliate, shape_shift_router, new_registry):
     assert shape_shift_router.owner() == affiliate
     with brownie.reverts():
         shape_shift_router.setRegistry(rando, {"from": rando})
@@ -58,7 +58,6 @@ def test_transfer_ownership(rando, affiliate, gov, shape_shift_router, new_regis
     # new owner can set registry
     assert shape_shift_router.owner() == rando
     shape_shift_router.setRegistry(new_registry, {"from": rando})
-
 
 def test_deposit(token, registry, vault, shape_shift_router, gov, rando):
     registry.newRelease(vault, {"from": gov})
@@ -246,3 +245,35 @@ def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, ra
     assert vault1.balanceOf(shape_shift_router) == 0
     assert vault2.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(shape_shift_router) == 0
+
+
+def test_withdraw_with_direct_deposit(gov, token, create_vault, registry, shape_shift_router, rando):
+    # this test is meant to mimic a scenario where a user
+    # deposits tokens directly into a vault (without our router)
+    # and then attempts to withdraw through our router.
+    # the tests specifically creates a new vault to ensure this would work
+    # with any vault, even ones our router has never used / approved. 
+    vault1 = create_vault(releaseDelta=1, token=token)
+    registry.newRelease(vault1, {"from": gov})
+    registry.endorseVault(vault1, {"from": gov})
+        
+    token.transfer(rando, 10000, {"from": gov})
+    token.approve(vault1, 10000, {"from": rando})
+    vault1.deposit(10000, {"from": rando});
+
+    assert vault1.balanceOf(rando) == 10000
+    assert token.balanceOf(rando) == 0
+
+    # rando deposited directly to the vault and now attempts to use our router to withdraw
+    vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
+    shape_shift_router.withdraw(token, rando, 10000, True, {"from": rando})
+
+    # NOTE: based on this test no approval is required for the yearn vault to move the
+    # vault tokens on a user's behalf.
+    
+    # rando should have his tokens back 
+    assert vault1.balanceOf(rando) == 0
+    assert token.balanceOf(rando) == 10000
+    assert vault1.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == 0
+    assert vault1.allowance(shape_shift_router, vault1) == 0
