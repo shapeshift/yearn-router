@@ -291,7 +291,7 @@ abstract contract BaseRouter is Ownable {
 
                 // Check if we have fully satisfied the request
                 // NOTE: use `amount = WITHDRAW_EVERYTHING` for withdrawing everything
-                if (amount <= (withdrawn + 1)) break; // +1 to avoid any integer rounding errors
+                if (amount <= withdrawn.add(1)) break; // +1 to avoid any integer rounding errors
             }
         }
 
