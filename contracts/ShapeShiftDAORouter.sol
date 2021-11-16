@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {VaultAPI} from "@yearnvaults/contracts/BaseWrapper.sol";
 import {BaseRouter} from "./BaseRouter.sol";
 
-contract ShapeShiftRouter is BaseRouter {
+contract ShapeShiftDAORouter is BaseRouter {
     uint256 constant MIGRATE_EVERYTHING = type(uint256).max;
     // VaultsAPI.depositLimit is unlimited
     uint256 constant UNCAPPED_DEPOSITS = type(uint256).max;
