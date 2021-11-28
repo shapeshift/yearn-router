@@ -12,6 +12,20 @@ contract ShapeShiftDAORouter is BaseRouter {
 
     constructor(address _registry) public BaseRouter(_registry) {}
 
+    /** 
+    @notice modifier to ensure that our balances never change with any of our exposed function calls. We cannot check against 0
+    because someone can send tokens to our address and then brick the entire contract.
+    @param _token address of the ERC20 token being deposited
+    */
+    modifier balanceInvariantCheck(address _token) {
+        uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
+        _;
+        require(
+            IERC20(_token).balanceOf(address(this)) == balanceBefore,
+            "ShapeShiftDAORouter: ROUTER_BALANCE_CHANGED"
+        );
+    }
+
     /**
     @notice called to deposit the callers token into the current best vault.  Caller must approve this contract
     to utilize the ERC20 or this call will revert.
@@ -24,7 +38,7 @@ contract ShapeShiftDAORouter is BaseRouter {
         address _token,
         address _recipient,
         uint256 _amount
-    ) external returns (uint256) {
+    ) external balanceInvariantCheck(_token) returns (uint256) {
         return _deposit(IERC20(_token), msg.sender, _recipient, _amount, true);
     }
 
@@ -42,7 +56,7 @@ contract ShapeShiftDAORouter is BaseRouter {
         address _recipient,
         uint256 _amount,
         bool _withdrawFromBest
-    ) external returns (uint256) {
+    ) external balanceInvariantCheck(_token) returns (uint256) {
         return
             _withdraw(
                 IERC20(_token),
@@ -61,6 +75,7 @@ contract ShapeShiftDAORouter is BaseRouter {
     */
     function withdraw(address _token, address _recipient)
         external
+        balanceInvariantCheck(_token)
         returns (uint256)
     {
         return
@@ -73,7 +88,6 @@ contract ShapeShiftDAORouter is BaseRouter {
             );
     }
 
-
     /**
     @notice called to migrate the callers token _amount from old vault(s) to the best vault. Caller must approve
     all vault tokens to be used by the router for this to work 
@@ -82,17 +96,22 @@ contract ShapeShiftDAORouter is BaseRouter {
     */
     function migrate(address _token, uint256 _amount)
         external
+        balanceInvariantCheck(_token)
         returns (uint256)
     {
         return _migrate(IERC20(_token), _amount);
     }
 
-     /**
+    /**
     @notice called to migrate all of the callers token from old vault(s) to the best vault. Caller must approve
     all vault tokens to be used by the router for this to work 
     @param _token address of the ERC20 token to withdraw from vaults
     */
-    function migrate(address _token) external returns (uint256) {
+    function migrate(address _token)
+        external
+        balanceInvariantCheck(_token)
+        returns (uint256)
+    {
         return _migrate(IERC20(_token), MIGRATE_EVERYTHING);
     }
 
