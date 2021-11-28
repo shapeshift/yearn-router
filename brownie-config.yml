@@ -6,18 +6,10 @@ networks:
 # automatically fetch contract sources from Etherscan
 autofetch_sources: True
 
-# require OpenZepplin Contracts
-dependencies:
-  - iearn-finance/yearn-vaults@0.4.3
-  - OpenZeppelin/openzeppelin-contracts@3.1.0
-
 # path remapping to support imports from GitHub/NPM
 compiler:
   solc:
-    version: 0.6.12
-    remappings:
-      - "@yearnvaults=iearn-finance/yearn-vaults@0.4.3"
-      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@3.1.0"
+    version: 0.8.10
 
 reports:
   exclude_contracts:
