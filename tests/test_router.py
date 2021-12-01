@@ -66,18 +66,32 @@ def test_deposit(token, registry, vault, shape_shift_router, gov, rando):
     token.transfer(rando, 10000, {"from": gov})
     assert vault.balanceOf(rando) == vault.balanceOf(shape_shift_router) == 0
 
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     token.approve(shape_shift_router, 10000, {"from": rando})
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
+    
     assert vault.balanceOf(rando) == 10000
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
+
 
 def test_deposit_with_recipient(token, registry, vault, shape_shift_router, gov, rando, rando2):
     registry.newRelease(vault, {"from": gov})
     registry.endorseVault(vault, {"from": gov})
     token.transfer(rando, 10000, {"from": gov})
     assert vault.balanceOf(rando) == vault.balanceOf(shape_shift_router) == 0
+    
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
     
     token.approve(shape_shift_router, 10000, {"from": rando})
     shape_shift_router.deposit(token, rando2, 10000, {"from": rando})
@@ -87,19 +101,27 @@ def test_deposit_with_recipient(token, registry, vault, shape_shift_router, gov,
     
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
+
 
 def test_withdraw_all(token, registry, vault, shape_shift_router, gov, rando):
     registry.newRelease(vault, {"from": gov})
     registry.endorseVault(vault, {"from": gov})
     token.transfer(rando, 1000000, {"from": gov})
     token.approve(shape_shift_router, 1000000, {"from": rando})
+    
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000    
+    
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
     shape_shift_router.withdraw(token, rando, 1000000, {"from": rando})
     
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 1000000
 
@@ -108,12 +130,19 @@ def test_withdraw_all_with_recipient(token, registry, vault, shape_shift_router,
     registry.endorseVault(vault, {"from": gov})
     token.transfer(rando, 1000000, {"from": gov})
     token.approve(shape_shift_router, 1000000, {"from": rando})
+
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
     shape_shift_router.withdraw(token, rando2, 1000000, {"from": rando})
     
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 0
     assert token.balanceOf(rando2) == 1000000
@@ -123,12 +152,19 @@ def test_withdraw_max(token, registry, vault, shape_shift_router, gov, rando):
     registry.endorseVault(vault, {"from": gov})
     token.transfer(rando, 10000, {"from": gov})
     token.approve(shape_shift_router, 10000, {"from": rando})
+
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
     shape_shift_router.withdraw(token, rando, {"from": rando})
     
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 10000
 
@@ -137,12 +173,19 @@ def test_withdraw_max_with_recipient(token, registry, vault, shape_shift_router,
     registry.endorseVault(vault, {"from": gov})
     token.transfer(rando, 10000, {"from": gov})
     token.approve(shape_shift_router, 10000, {"from": rando})
+
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
     shape_shift_router.withdraw(token, rando2, {"from": rando})
     
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault.balanceOf(shape_shift_router) == 0
     assert token.balanceOf(rando) == 0
     assert token.balanceOf(rando2) == 10000
@@ -154,11 +197,17 @@ def test_withdraw_half(token, registry, vault, shape_shift_router, gov, rando):
     token.approve(shape_shift_router, 1000000, {"from": rando})
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
     shape_shift_router.withdraw(token, rando, 500000, {"from": rando})
     
     assert token.balanceOf(rando) == 500000
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault.balanceOf(shape_shift_router) == 0
 
 def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_router, gov, rando, interface):
@@ -168,6 +217,13 @@ def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_rou
     
     token.transfer(rando, 20000, {"from": gov})
     token.approve(shape_shift_router, 20000, {"from": rando})
+
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
     
     assert vault1.balanceOf(rando) == 10000
@@ -190,7 +246,7 @@ def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_rou
     assert token.balanceOf(rando) == 15000
     assert vault2.balanceOf(rando) == 5000
     assert vault1.balanceOf(rando) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault1.balanceOf(shape_shift_router) == 0
     assert vault2.balanceOf(shape_shift_router) == 0
 
@@ -200,6 +256,12 @@ def test_migrate(token, registry, create_vault, shape_shift_router, gov, rando, 
     registry.newRelease(vault1, {"from": gov})
     registry.endorseVault(vault1, {"from": gov})
     
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     token.transfer(rando, 10000, {"from": gov})
     token.approve(shape_shift_router, 10000, {"from": rando})
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
@@ -219,7 +281,7 @@ def test_migrate(token, registry, create_vault, shape_shift_router, gov, rando, 
     assert vault2.balanceOf(rando) == 10000
     assert vault1.balanceOf(shape_shift_router) == 0
     assert vault2.balanceOf(shape_shift_router) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
 
 def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, rando, interface):
     vault1 = create_vault(releaseDelta=1, token=token)
@@ -228,6 +290,13 @@ def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, ra
     
     token.transfer(rando, 10000, {"from": gov})
     token.approve(shape_shift_router, 10000, {"from": rando})
+
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
     
     assert vault1.balanceOf(rando) == 10000
@@ -245,7 +314,8 @@ def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, ra
     assert vault2.balanceOf(rando) == 5000
     assert vault1.balanceOf(shape_shift_router) == 0
     assert vault2.balanceOf(shape_shift_router) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
+
 
 
 def test_withdraw_with_direct_deposit(gov, token, create_vault, registry, shape_shift_router, rando):
@@ -267,6 +337,13 @@ def test_withdraw_with_direct_deposit(gov, token, create_vault, registry, shape_
 
     # rando deposited directly to the vault and now attempts to use our router to withdraw
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
+    
+    # transfer some random tokens to the router to ensure this doesn't effect any accounting
+    # or the invariant check.
+    token.transfer(shape_shift_router, 10000, {"from": gov})
+    routerTokenBalance = token.balanceOf(shape_shift_router)
+    assert routerTokenBalance == 10000
+    
     shape_shift_router.withdraw(token, rando, 10000, {"from": rando})
 
     # NOTE: based on this test no approval is required for the yearn vault to move the
@@ -276,5 +353,5 @@ def test_withdraw_with_direct_deposit(gov, token, create_vault, registry, shape_
     assert vault1.balanceOf(rando) == 0
     assert token.balanceOf(rando) == 10000
     assert vault1.balanceOf(shape_shift_router) == 0
-    assert token.balanceOf(shape_shift_router) == 0
+    assert token.balanceOf(shape_shift_router) == routerTokenBalance
     assert vault1.allowance(shape_shift_router, vault1) == 0
