@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "devDependencies": {
     "ethlint": "^1.2.5",
+    "ganache-cli": "^6.12.2",
     "husky": "^4.3.0",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
