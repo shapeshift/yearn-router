@@ -10,7 +10,7 @@ def test_config(gov, token, vault, registry, shape_shift_router):
     assert registry.numVaults(token) == 0
 
     with brownie.reverts():
-        shape_shift_router.bestVault(token)
+        shape_shift_router.latestVault(token)
   
     # This won't revert though, there's no Vaults yet
     assert shape_shift_router.allVaults(token) == []
@@ -20,7 +20,7 @@ def test_config(gov, token, vault, registry, shape_shift_router):
     registry.endorseVault(vault, {"from": gov})
     
     assert registry.numVaults(token) == 1
-    assert shape_shift_router.bestVault(token) == vault
+    assert shape_shift_router.latestVault(token) == vault
     assert shape_shift_router.allVaults(token) == [vault]
 
 
@@ -96,7 +96,7 @@ def test_withdraw_all(token, registry, vault, shape_shift_router, gov, rando):
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
-    shape_shift_router.withdraw(token, rando, 1000000, True, {"from": rando})
+    shape_shift_router.withdraw(token, rando, 1000000, {"from": rando})
     
     assert token.balanceOf(shape_shift_router) == 0
     assert vault.balanceOf(shape_shift_router) == 0
@@ -110,7 +110,7 @@ def test_withdraw_all_with_recipient(token, registry, vault, shape_shift_router,
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
-    shape_shift_router.withdraw(token, rando2, 1000000, True, {"from": rando})
+    shape_shift_router.withdraw(token, rando2, 1000000, {"from": rando})
     
     assert token.balanceOf(shape_shift_router) == 0
     assert vault.balanceOf(shape_shift_router) == 0
@@ -154,7 +154,7 @@ def test_withdraw_half(token, registry, vault, shape_shift_router, gov, rando):
     shape_shift_router.deposit(token, rando, 1000000, {"from": rando})
 
     vault.approve(shape_shift_router, vault.balanceOf(rando), {"from": rando})
-    shape_shift_router.withdraw(token, rando, 500000, True, {"from": rando})
+    shape_shift_router.withdraw(token, rando, 500000, {"from": rando})
     
     assert token.balanceOf(rando) == 500000
     assert token.balanceOf(shape_shift_router) == 0
@@ -175,7 +175,7 @@ def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_rou
     registry.newRelease(vault2, {"from": gov})
     registry.endorseVault(vault2, {"from": gov})
 
-    assert shape_shift_router.bestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
 
     assert vault1.balanceOf(rando) == 10000
@@ -184,7 +184,7 @@ def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_rou
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
     vault2.approve(shape_shift_router, vault2.balanceOf(rando), {"from": rando})
 
-    shape_shift_router.withdraw(token, rando, 15000, True, {"from": rando})
+    shape_shift_router.withdraw(token, rando, 15000, {"from": rando})
 
     assert token.balanceOf(rando) == 15000
     assert vault2.balanceOf(rando) == 5000
@@ -209,7 +209,7 @@ def test_migrate(token, registry, create_vault, shape_shift_router, gov, rando):
     registry.newRelease(vault2, {"from": gov})
     registry.endorseVault(vault2, {"from": gov})
 
-    assert shape_shift_router.bestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
    
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
     shape_shift_router.migrate(token, {"from": rando})
@@ -235,7 +235,7 @@ def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, ra
     registry.newRelease(vault2, {"from": gov})
     registry.endorseVault(vault2, {"from": gov})
 
-    assert shape_shift_router.bestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
    
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
     shape_shift_router.migrate(token, 5000, {"from": rando})
@@ -266,7 +266,7 @@ def test_withdraw_with_direct_deposit(gov, token, create_vault, registry, shape_
 
     # rando deposited directly to the vault and now attempts to use our router to withdraw
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
-    shape_shift_router.withdraw(token, rando, 10000, True, {"from": rando})
+    shape_shift_router.withdraw(token, rando, 10000, {"from": rando})
 
     # NOTE: based on this test no approval is required for the yearn vault to move the
     # vault tokens on a user's behalf.

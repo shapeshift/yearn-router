@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import {IERC20} from "../openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "../openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Math} from "../openzeppelin-contracts/contracts/utils/math/Math.sol";
-import {Ownable} from "../openzeppelin-contracts/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {RegistryAPI, VaultAPI} from "./YearnAPI.sol";
 
@@ -124,6 +124,33 @@ contract ShapeShiftDAORouter is Ownable {
     }
 
     /**
+     * @notice Used to get the most recent vault for the token using the registry.
+     * @return An instance of a VaultAPI
+     */
+    function latestVault(address token) public view virtual returns (VaultAPI) {
+        return VaultAPI(registry.latestVault(token));
+    }
+
+    /**
+     * @notice
+     *  Used to get all vaults from the registry for the token
+     * @return An array containing instances of VaultAPI
+     */
+    function allVaults(address token)
+        public
+        view
+        virtual
+        returns (VaultAPI[] memory)
+    {
+        uint256 num_vaults = registry.numVaults(token);
+        VaultAPI[] memory vaults = new VaultAPI[](num_vaults);
+        for (uint256 vault_id; vault_id < num_vaults; vault_id++) {
+            vaults[vault_id] = VaultAPI(registry.vaults(token, vault_id));
+        }
+        return vaults;
+    }
+
+    /**
      * @notice Called to deposit the caller's tokens into the most-current vault, crediting the minted shares to recipient.
      * @dev The caller must approve this contract to utilize the specified ERC20 or this call will revert.
      * @param token Address of the ERC20 token being deposited
@@ -213,6 +240,28 @@ contract ShapeShiftDAORouter is Ownable {
         } else {
             shares = vault.deposit(amount, recipient);
         }
+    }
+
+    /**
+     * @notice Called to redeem the all of the caller's shares from underlying vault(s), with the proceeds distributed to recipient.
+     * @dev The caller must approve this contract to use their vault shares or this call will revert.
+     * @param token Address of the ERC20 token to withdraw from vaults
+     * @param recipient Address to receive the withdrawn tokens
+     * @return The number of tokens received by recipient.
+     */
+    function withdraw(address token, address recipient)
+        external
+        returns (uint256)
+    {
+        return
+            _withdraw(
+                IERC20(token),
+                msg.sender,
+                recipient,
+                WITHDRAW_EVERYTHING,
+                0,
+                MAX_VAULT_ID
+            );
     }
 
     /**
@@ -355,6 +404,23 @@ contract ShapeShiftDAORouter is Ownable {
     }
 
     /**
+     * @notice Called to migrate all of the caller's shares to the latest vault.
+     * @dev The caller must approve this contract to use their vault shares or this call will revert.
+     * @param token Address of the ERC20 token to migrate the vaults of
+     * @return The number of tokens migrated.
+     */
+    function migrate(address token) external returns (uint256) {
+        return
+            _migrate(
+                IERC20(token),
+                msg.sender,
+                WITHDRAW_EVERYTHING,
+                0,
+                MAX_VAULT_ID
+            );
+    }
+
+    /**
      * @notice Called to migrate the caller's shares to the latest vault.
      * @dev The caller must approve this contract to use their vault shares or this call will revert.
      * @param token Address of the ERC20 token to migrate the vaults of
@@ -410,10 +476,10 @@ contract ShapeShiftDAORouter is Ownable {
         uint256 latestVaultId = registry.numVaults(address(token)) - 1;
         if (amount == 0 || latestVaultId == 0) return 0; // Nothing to migrate, or nowhere to go (not a failure)
 
-        VaultAPI latestVault = registry.vaults(address(token), latestVaultId);
+        VaultAPI currentVault = latestVault(address(token));
         uint256 _amount = Math.min(
             amount,
-            latestVault.depositLimit() - latestVault.totalAssets()
+            currentVault.depositLimit() - currentVault.totalAssets()
         );
 
         uint256 beforeWithdrawBal = token.balanceOf(address(this));

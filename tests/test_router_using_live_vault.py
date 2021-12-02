@@ -7,7 +7,7 @@ AMOUNT = 100
 
 def test_config_live(live_token, live_vault, live_registry, live_shape_shift_router):
     assert live_registry.numVaults(live_token) > 0
-    assert live_shape_shift_router.bestVault(live_token) == live_vault
+    assert live_shape_shift_router.latestVault(live_token) == live_vault
     assert live_shape_shift_router.allVaults(live_token) == [live_vault]
 
 def test_setRegistry_live(
@@ -87,7 +87,7 @@ def test_withdraw_live(live_token, live_vault, live_shape_shift_router, live_wha
     live_shape_shift_router.deposit(live_token, rando, 10000, {"from": rando})
 
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
-    live_shape_shift_router.withdraw(live_token, rando, 10000, True, {"from": rando})
+    live_shape_shift_router.withdraw(live_token, rando, 10000, {"from": rando})
     
     assert live_vault.balanceOf(rando) == 0
     assert live_vault.balanceOf(live_shape_shift_router) == 0
@@ -119,7 +119,7 @@ def test_withdraw_half_live(live_token, live_vault, live_shape_shift_router, liv
     live_shape_shift_router.deposit(live_token, rando, 10000, {"from": rando})
 
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
-    live_shape_shift_router.withdraw(live_token, rando, 5000, True, {"from": rando})
+    live_shape_shift_router.withdraw(live_token, rando, 5000, {"from": rando})
     
     assert live_vault.balanceOf(live_shape_shift_router) == 0
     assert live_token.balanceOf(live_shape_shift_router) == 0
@@ -134,7 +134,7 @@ def test_withdraw_with_recipient_live(live_token, live_vault, live_shape_shift_r
     live_shape_shift_router.deposit(live_token, rando, 10000, {"from": rando})
 
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
-    live_shape_shift_router.withdraw(live_token, rando2, 10000, True, {"from": rando})
+    live_shape_shift_router.withdraw(live_token, rando2, 10000, {"from": rando})
     assert live_vault.balanceOf(rando) == 0
     assert live_vault.balanceOf(rando2) == 0
     assert live_vault.balanceOf(live_shape_shift_router) == 0
@@ -151,7 +151,7 @@ def test_withdraw_half_with_recipient_live(live_token, live_vault, live_shape_sh
     live_shape_shift_router.deposit(live_token, rando, 10000, {"from": rando})
 
     live_vault.approve(live_shape_shift_router, live_vault.balanceOf(rando), {"from": rando})
-    live_shape_shift_router.withdraw(live_token, rando2, 5000, True, {"from": rando})
+    live_shape_shift_router.withdraw(live_token, rando2, 5000, {"from": rando})
 
     assert live_token.balanceOf(rando) == 0
     assert live_vault.balanceOf(rando2) == 0
