@@ -3,14 +3,6 @@
 networks:
   default: mainnet-fork
 
-# automatically fetch contract sources from Etherscan
-autofetch_sources: True
-
-# these are fetched from GitHub
-dependencies:
-  - yearn/yearn-vaults@0.4.3
-  - OpenZeppelin/openzeppelin-contracts@4.4.0
-
 # path remapping to support imports from GitHub/NPM
 compiler:
   solc:

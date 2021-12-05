@@ -1,8 +1,11 @@
 import pytest
-from brownie import accounts, config, Contract
+from brownie import accounts, config, project, Contract
 from eth_account import Account
 from eth_account.messages import encode_structured_data
 
+@pytest.fixture(scope="session")
+def yearn_vaults():
+    yield project.load("./yearn-vaults")
 
 @pytest.fixture
 def gov(accounts):
@@ -38,9 +41,8 @@ def rando2(accounts):
     yield accounts[4]
 
 @pytest.fixture
-def token(pm, gov):
-    Token = pm(config["dependencies"][0]).Token
-    yield gov.deploy(Token, 18)
+def token(yearn_vaults, gov):
+    yield gov.deploy(yearn_vaults.Token, 18)
 
 @pytest.fixture
 def shape_shift_router(affiliate, registry,  ShapeShiftDAORouter):
@@ -55,12 +57,9 @@ def vault(create_vault, token):
 
 
 @pytest.fixture
-def create_vault(pm, gov, rewards, guardian, management):
+def create_vault(yearn_vaults, live_registry, gov, rewards, guardian, management):
     def create_vault(token, releaseDelta=0, governance=gov):
-        liveRegistry = Contract("0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804")
-        Vault = pm(config["dependencies"][0]).Vault
-
-        tx = liveRegistry.newExperimentalVault(
+        tx = live_registry.newExperimentalVault(
             token,
             governance,
             guardian,
@@ -70,7 +69,7 @@ def create_vault(pm, gov, rewards, guardian, management):
             releaseDelta,
             {"from": governance},
         )
-        vault = Vault.at(tx.return_value)
+        vault = yearn_vaults.Vault.at(tx.return_value)
 
         vault.setDepositLimit(2 ** 256 - 1, {"from": governance})
         return vault
@@ -79,15 +78,13 @@ def create_vault(pm, gov, rewards, guardian, management):
 
 
 @pytest.fixture
-def registry(pm, gov):
-    Registry = pm(config["dependencies"][0]).Registry
-    yield gov.deploy(Registry)
+def registry(yearn_vaults, gov):
+    yield gov.deploy(yearn_vaults.Registry)
 
 
 @pytest.fixture
-def new_registry(pm, gov):
-    Registry = pm(config["dependencies"][0]).Registry
-    yield gov.deploy(Registry)
+def new_registry(yearn_vaults, gov):
+    yield gov.deploy(yearn_vaults.Registry)
 
 @pytest.fixture
 def live_token(live_vault):
@@ -96,8 +93,8 @@ def live_token(live_vault):
 
 
 @pytest.fixture
-def live_vault():
-    yield Contract("0x986b4aff588a109c09b50a03f42e4110e29d353f")  # yvseth
+def live_vault(yearn_vaults):
+    yield yearn_vaults.Vault.at("0x986b4aff588a109c09b50a03f42e4110e29d353f")  # yvseth
 
 @pytest.fixture
 def live_shape_shift_router(ShapeShiftDAORouter, affiliate, live_registry):
@@ -107,8 +104,8 @@ def live_shape_shift_router(ShapeShiftDAORouter, affiliate, live_registry):
     )
 
 @pytest.fixture
-def live_registry():
-    yield Contract("v2.registry.ychad.eth")
+def live_registry(yearn_vaults):
+    yield yearn_vaults.Registry.at("v2.registry.ychad.eth")
 
 
 @pytest.fixture
