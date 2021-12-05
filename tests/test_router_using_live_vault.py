@@ -10,6 +10,9 @@ def test_config_live(live_token, live_vault, live_registry, live_shape_shift_rou
     assert interface.RegistryAPI(live_shape_shift_router.registry()).latestVault(live_token) == live_vault
     assert interface.RegistryAPI(live_shape_shift_router.registry()).numVaults(live_token) == 1
     assert interface.RegistryAPI(live_shape_shift_router.registry()).vaults(live_token, 0) == live_vault
+    assert live_shape_shift_router.latestVault(live_token) == live_vault
+    assert live_shape_shift_router.numVaults(live_token) == 1
+    assert live_shape_shift_router.vaults(live_token, 0) == live_vault
 
 def test_setRegistry_live(
     rando, affiliate, live_gov, live_shape_shift_router, new_registry, gov
