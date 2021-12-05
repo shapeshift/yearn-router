@@ -49,6 +49,22 @@ contract ShapeShiftDAORouter is Ownable {
         );
     }
 
+    function numVaults(address token) external view returns (uint256) {
+        return registry.numVaults(token);
+    }
+
+    function vaults(address token, uint256 deploymentId)
+        external
+        view
+        returns (VaultAPI)
+    {
+        return registry.vaults(token, deploymentId);
+    }
+
+    function latestVault(address token) external view returns (VaultAPI) {
+        return registry.latestVault(token);
+    }
+
     /**
      * @notice Gets the balance of an account across all the vaults for a token.
      * @param token Which ERC20 token to pull vault balances for
@@ -451,10 +467,10 @@ contract ShapeShiftDAORouter is Ownable {
         uint256 latestVaultId = registry.numVaults(address(token)) - 1;
         if (amount == 0 || latestVaultId == 0) return 0; // Nothing to migrate, or nowhere to go (not a failure)
 
-        VaultAPI latestVault = registry.vaults(address(token), latestVaultId);
+        VaultAPI _latestVault = registry.vaults(address(token), latestVaultId);
         uint256 _amount = Math.min(
             amount,
-            latestVault.depositLimit() - latestVault.totalAssets()
+            _latestVault.depositLimit() - _latestVault.totalAssets()
         );
 
         uint256 beforeWithdrawBal = token.balanceOf(address(this));

@@ -11,9 +11,11 @@ def test_config(gov, token, vault, registry, shape_shift_router, interface):
 
     with brownie.reverts():
         interface.RegistryAPI(shape_shift_router.registry()).latestVault(token)
+        shape_shift_router.latestVault(token)
   
     # This won't revert though, there's no Vaults yet
     assert interface.RegistryAPI(shape_shift_router.registry()).numVaults(token) == 0
+    assert shape_shift_router.numVaults(token) == 0
 
     # Now they work when we have a Vault
     registry.newRelease(vault, {"from": gov})
@@ -23,6 +25,9 @@ def test_config(gov, token, vault, registry, shape_shift_router, interface):
     assert interface.RegistryAPI(shape_shift_router.registry()).latestVault(token) == vault
     assert interface.RegistryAPI(shape_shift_router.registry()).numVaults(token) == 1
     assert interface.RegistryAPI(shape_shift_router.registry()).vaults(token, 0) == vault
+    assert shape_shift_router.latestVault(token) == vault
+    assert shape_shift_router.numVaults(token) == 1
+    assert shape_shift_router.vaults(token, 0) == vault
 
 
 def test_setRegistry(rando, affiliate, gov, shape_shift_router, new_registry):
@@ -233,6 +238,8 @@ def test_withdraw_multiple_vaults(token, registry, create_vault, shape_shift_rou
     registry.endorseVault(vault2, {"from": gov})
 
     assert interface.RegistryAPI(shape_shift_router.registry()).latestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
+
     shape_shift_router.deposit(token, rando, 10000, {"from": rando})
 
     assert vault1.balanceOf(rando) == 10000
@@ -273,6 +280,7 @@ def test_migrate(token, registry, create_vault, shape_shift_router, gov, rando, 
     registry.endorseVault(vault2, {"from": gov})
 
     assert interface.RegistryAPI(shape_shift_router.registry()).latestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
    
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
     shape_shift_router.migrate(token, {"from": rando})
@@ -306,6 +314,7 @@ def test_migrate_half(token, registry, create_vault, shape_shift_router, gov, ra
     registry.endorseVault(vault2, {"from": gov})
 
     assert interface.RegistryAPI(shape_shift_router.registry()).latestVault(token) == vault2
+    assert shape_shift_router.latestVault(token) == vault2
    
     vault1.approve(shape_shift_router, vault1.balanceOf(rando), {"from": rando})
     shape_shift_router.migrate(token, 5000, {"from": rando})
