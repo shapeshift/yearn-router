@@ -353,7 +353,6 @@ contract ShapeShiftDAORouter is Ownable {
                 }
                 if (availableShares == 0) continue;
 
-                maxShares = availableShares;
                 if (amount != WITHDRAW_EVERYTHING) {
                     // Compute amount to withdraw fully to satisfy the request
                     uint256 estimatedShares = ((amount - withdrawn) *
@@ -363,6 +362,8 @@ contract ShapeShiftDAORouter is Ownable {
                     // NOTE: Avoid corner case where `estimatedShares` isn't precise enough
                     // NOTE: If `0 < estimatedShares < 1` but `availableShares > 1`, this will withdraw more than necessary
                     maxShares = Math.min(availableShares, estimatedShares);
+                } else {
+                  maxShares = availableShares;
                 }
             }
 
