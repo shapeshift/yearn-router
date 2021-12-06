@@ -13,7 +13,6 @@ import {RegistryAPI, VaultAPI} from "../interfaces/YearnAPI.sol";
  * to the caller and does not hold any funds or assets (vault tokens or other ERC20 tokens)
  */
 contract ShapeShiftDAORouter is Ownable {
-
     RegistryAPI public registry;
 
     // ERC20 Unlimited Approvals (short-circuits VaultAPI.transferFrom)
@@ -330,65 +329,64 @@ contract ShapeShiftDAORouter is Ownable {
         uint256 _lastVaultId = lastVaultId;
         if (_lastVaultId == MAX_VAULT_ID)
             _lastVaultId = registry.numVaults(address(token)) - 1;
+
         for (
             uint256 i = firstVaultId;
             withdrawn + 1 < amount && i <= _lastVaultId;
             i++
         ) {
             VaultAPI vault = registry.vaults(address(token), i);
+            uint256 maxShares;
 
-            uint256 availableShares = Math.min(
-                vault.balanceOf(withdrawer),
-                vault.maxAvailableShares()
-            );
-            if (withdrawer != address(this)) {
-                // Restrict by the allowance that `withdrawer` has given to this contract
-                availableShares = Math.min(
-                    availableShares,
-                    vault.allowance(withdrawer, address(this))
+            {
+                //scoping to avoid stack too deep
+                uint256 availableShares = Math.min(
+                    vault.balanceOf(withdrawer),
+                    vault.maxAvailableShares()
                 );
+                if (withdrawer != address(this)) {
+                    // Restrict by the allowance that `withdrawer` has given to this contract
+                    availableShares = Math.min(
+                        availableShares,
+                        vault.allowance(withdrawer, address(this))
+                    );
+                }
+                if (availableShares == 0) continue;
+
+                maxShares = availableShares;
+                if (amount != WITHDRAW_EVERYTHING) {
+                    // Compute amount to withdraw fully to satisfy the request
+                    uint256 estimatedShares = ((amount - withdrawn) *
+                        10**vault.decimals()) / vault.pricePerShare();
+
+                    // Limit amount to withdraw to the maximum made available to this contract
+                    // NOTE: Avoid corner case where `estimatedShares` isn't precise enough
+                    // NOTE: If `0 < estimatedShares < 1` but `availableShares > 1`, this will withdraw more than necessary
+                    maxShares = Math.min(availableShares, estimatedShares);
+                }
             }
-            if (availableShares == 0) continue;
 
-            uint256 _amount = amount;
-
-            uint256 maxShares = availableShares;
-            if (amount != WITHDRAW_EVERYTHING) {
-                // Compute amount to withdraw fully to satisfy the request
-                uint256 estimatedShares = ((_amount - withdrawn) *
-                    10**vault.decimals()) / vault.pricePerShare();
-
-                // Limit amount to withdraw to the maximum made available to this contract
-                // NOTE: Avoid corner case where `estimatedShares` isn't precise enough
-                // NOTE: If `0 < estimatedShares < 1` but `availableShares > 1`, this will withdraw more than necessary
-                maxShares = Math.min(availableShares, estimatedShares);
-            }
-
-            // Copies to avoid solidity's StackTooDeep
-            address _withdrawer = withdrawer;
-            address _recipient = recipient;
-
-            if (_withdrawer != address(this)) {
+            if (withdrawer != address(this)) {
                 uint256 beforeBal = vault.balanceOf(address(this));
 
                 SafeERC20.safeTransferFrom(
                     vault,
-                    _withdrawer,
+                    withdrawer,
                     address(this),
                     maxShares
                 );
 
-                withdrawn += vault.withdraw(maxShares, _recipient);
+                withdrawn += vault.withdraw(maxShares, recipient);
 
                 uint256 afterWithdrawBal = vault.balanceOf(address(this));
                 if (afterWithdrawBal > beforeBal)
                     SafeERC20.safeTransfer(
                         vault,
-                        _withdrawer,
+                        withdrawer,
                         afterWithdrawBal - beforeBal
                     );
             } else {
-                withdrawn += vault.withdraw(maxShares, _recipient);
+                withdrawn += vault.withdraw(maxShares, recipient);
             }
         }
     }
