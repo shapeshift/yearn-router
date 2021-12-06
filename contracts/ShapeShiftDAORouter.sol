@@ -13,7 +13,6 @@ import {RegistryAPI, VaultAPI} from "../interfaces/YearnAPI.sol";
  * to the caller and does not hold any funds or assets (vault tokens or other ERC20 tokens)
  */
 contract ShapeShiftDAORouter is Ownable {
-    using Math for uint256;
 
     RegistryAPI public registry;
 
@@ -27,25 +26,25 @@ contract ShapeShiftDAORouter is Ownable {
     uint256 constant MIGRATE_EVERYTHING = type(uint256).max;
     uint256 constant MAX_VAULT_ID = type(uint256).max;
 
-    constructor(address _registry) {
+    constructor(address yearnRegistry) {
         // Recommended to use `v2.registry.ychad.eth`
-        registry = RegistryAPI(_registry);
+        registry = RegistryAPI(yearnRegistry);
     }
 
     /**
      * @notice Used to update the yearn registry. The choice of registry is SECURITY SENSITIVE, so only the
      * owner can update it.
-     * @param _registry The new registry address.
+     * @param yearnRegistry The new registry address.
      */
-    function setRegistry(address _registry) external onlyOwner() {
+    function setRegistry(address yearnRegistry) external onlyOwner() {
         address currentYearnGovernanceAddress = registry.governance();
         // In case you want to override the registry instead of re-deploying
-        registry = RegistryAPI(_registry);
+        registry = RegistryAPI(yearnRegistry);
         // Make sure there's no change in governance
         // NOTE: Also avoid bricking the router from setting a bad registry
         require(
             currentYearnGovernanceAddress == registry.governance(),
-            "INVALID_REGISTRY"
+            "invalid registry"
         );
     }
 
