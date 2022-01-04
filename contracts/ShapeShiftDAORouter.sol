@@ -99,7 +99,7 @@ contract ShapeShiftDAORouter is Ownable {
         if (_lastVaultId == MAX_VAULT_ID)
             _lastVaultId = registry.numVaults(address(token)) - 1;
 
-        for (uint256 i = 0; i <= _lastVaultId; i++) {
+        for (uint256 i = firstVaultId; i <= _lastVaultId; i++) {
             VaultAPI vault = registry.vaults(token, i);
             uint256 vaultTokenBalance = (vault.balanceOf(account) *
                 vault.pricePerShare()) / 10**vault.decimals();
