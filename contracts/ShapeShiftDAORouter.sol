@@ -362,27 +362,24 @@ contract ShapeShiftDAORouter is Ownable {
                 maxShares = availableShares;
             }
 
-            if (withdrawer != address(this)) {
-                uint256 beforeBal = vault.balanceOf(address(this));
+            uint256 beforeBal = vault.balanceOf(address(this));
 
-                SafeERC20.safeTransferFrom(
+            SafeERC20.safeTransferFrom(
+                vault,
+                withdrawer,
+                address(this),
+                maxShares
+            );
+
+            withdrawn += vault.withdraw(maxShares, recipient);
+
+            uint256 afterWithdrawBal = vault.balanceOf(address(this));
+            if (afterWithdrawBal > beforeBal) {
+                SafeERC20.safeTransfer(
                     vault,
                     withdrawer,
-                    address(this),
-                    maxShares
+                    afterWithdrawBal - beforeBal
                 );
-
-                withdrawn += vault.withdraw(maxShares, recipient);
-
-                uint256 afterWithdrawBal = vault.balanceOf(address(this));
-                if (afterWithdrawBal > beforeBal)
-                    SafeERC20.safeTransfer(
-                        vault,
-                        withdrawer,
-                        afterWithdrawBal - beforeBal
-                    );
-            } else {
-                withdrawn += vault.withdraw(maxShares, recipient);
             }
         }
     }
