@@ -341,13 +341,11 @@ contract ShapeShiftDAORouter is Ownable {
                 vault.balanceOf(withdrawer),
                 vault.maxAvailableShares()
             );
-            if (withdrawer != address(this)) {
-                // Restrict by the allowance that `withdrawer` has given to this contract
-                availableShares = Math.min(
-                    availableShares,
-                    vault.allowance(withdrawer, address(this))
-                );
-            }
+            // Restrict by the allowance that `withdrawer` has given to this contract
+            availableShares = Math.min(
+                availableShares,
+                vault.allowance(withdrawer, address(this))
+            );
             if (availableShares == 0) continue;
 
             uint256 maxShares;
@@ -491,10 +489,7 @@ contract ShapeShiftDAORouter is Ownable {
         require(afterWithdrawBal > afterDepositBal, "deposit failed");
         migrated = afterWithdrawBal - afterDepositBal;
 
-        if (
-            migrator != address(this) &&
-            afterWithdrawBal - beforeWithdrawBal > migrated
-        ) {
+        if (afterWithdrawBal - beforeWithdrawBal > migrated) {
             SafeERC20.safeTransfer(
                 token,
                 migrator,
